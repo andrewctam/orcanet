@@ -16,7 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * 
+ *
  */
 package main
 
@@ -41,9 +41,9 @@ var fileUsersMap = make(map[string][]string)
 // prints the current hashmap
 func printMap() {
 	fmt.Println("Current map:")
-    for key, value := range fileUsersMap {
-        fmt.Printf("File ID: %s, UserIDs: %v\n", key, value)
-    }
+	for key, value := range fileUsersMap {
+		fmt.Printf("File ID: %s, UserIDs: %v\n", key, value)
+	}
 }
 
 type server struct {
@@ -72,7 +72,7 @@ func (s *server) RequestFile(ctx context.Context, in *pb.FileRequest) (*pb.Messa
 
 	fileUsersMap[fileId] = append(fileUsersMap[fileId], userId)
 
-	return &pb.MessageReply{ Message: "OK" }, nil
+	return &pb.MessageReply{Message: "OK"}, nil
 }
 
 // Get a list of userIds who are requesting a file with fileId
@@ -82,5 +82,5 @@ func (s *server) CheckRequests(ctx context.Context, in *pb.CheckRequest) (*pb.Li
 	userIds := fileUsersMap[fileId]
 	printMap()
 
-	return &pb.ListReply{ Strings: userIds }, nil
+	return &pb.ListReply{Strings: userIds}, nil
 }

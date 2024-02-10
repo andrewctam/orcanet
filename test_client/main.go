@@ -31,11 +31,10 @@ import (
 )
 
 var (
-	addr = flag.String("addr", "localhost:50051", "the address to connect to")
+	addr   = flag.String("addr", "localhost:50051", "the address to connect to")
 	userId = flag.String("userId", "user123", "User ID")
 	fileId = flag.String("fileId", "imageOfRat", "File ID")
 )
-
 
 func main() {
 	flag.Parse()
@@ -56,7 +55,7 @@ func createRequest(c pb.MarketClient, userId string, fileId string) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
-	r, err := c.RequestFile(ctx, &pb.FileRequest{UserId: userId, FileId: fileId })
+	r, err := c.RequestFile(ctx, &pb.FileRequest{UserId: userId, FileId: fileId})
 	if err != nil {
 		log.Fatalf("Error: %v", err)
 	} else {
@@ -69,7 +68,7 @@ func checkRequests(c pb.MarketClient, fileId string) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
-	reqs, err := c.CheckRequests(ctx, &pb.CheckRequest{FileId: fileId })
+	reqs, err := c.CheckRequests(ctx, &pb.CheckRequest{FileId: fileId})
 	if err != nil {
 		log.Fatalf("Error: %v", err)
 	} else {
