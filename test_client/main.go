@@ -48,7 +48,7 @@ func main() {
 
 	createRequest(c, *userId, *fileId)
 	checkRequests(c, *fileId)
-	
+
 	registerRequest(c, *userId, *fileId)
 	createRequest(c, *userId, *fileId)
 	checkRequests(c, *fileId)
@@ -72,7 +72,7 @@ func checkRequests(c pb.MarketClient, fileId string) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
-	reqs, err := c.CheckRequests(ctx, &pb.CheckRequest{ FileId: fileId })
+	reqs, err := c.CheckRequests(ctx, &pb.CheckRequest{FileId: fileId})
 	if err != nil {
 		log.Fatalf("Error: %v", err)
 	} else {
@@ -84,7 +84,7 @@ func registerRequest(c pb.MarketClient, userId string, fileId string) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
-	_, err := c.RegisterFile(ctx, &pb.RegisterRequest{ UserId: userId, FileId: fileId })
+	_, err := c.RegisterFile(ctx, &pb.RegisterRequest{UserId: userId, FileId: fileId})
 	if err != nil {
 		log.Fatalf("Error: %v", err)
 	} else {

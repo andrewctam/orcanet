@@ -75,16 +75,15 @@ func main() {
 func (s *server) RequestFile(ctx context.Context, in *pb.FileRequest) (*pb.FileResponse, error) {
 	userId := in.GetUserId()
 	fileId := in.GetFileId()
-	
+
 	// Check if file is held by anyone; I hate Go
 	if _, ok := fileHolders[fileId]; !ok {
-		return &pb.FileResponse { Exists: false, Message: "File not found" }, nil;
+		return &pb.FileResponse{Exists: false, Message: "File not found"}, nil
 	}
 
 	fileUsersMap[fileId] = append(fileUsersMap[fileId], userId)
 
-	return &pb.MessageReply{Message: "OK"}, nil
-	return &pb.FileResponse{ Exists: true, Message: "OK" }, nil
+	return &pb.FileResponse{Exists: true, Message: "OK"}, nil
 }
 
 // Get a list of userIds who are requesting a file with fileId
@@ -94,7 +93,7 @@ func (s *server) CheckRequests(ctx context.Context, in *pb.CheckRequest) (*pb.Li
 	userIds := fileUsersMap[fileId]
 	printMap()
 
-	return &pb.ListReply{ Strings: userIds }, nil
+	return &pb.ListReply{Strings: userIds}, nil
 }
 
 // register that the userId holds fileId
@@ -102,8 +101,8 @@ func (s *server) RegisterFile(ctx context.Context, in *pb.RegisterRequest) (*emp
 	userId := in.GetUserId()
 	fileId := in.GetFileId()
 
-	fileUsersMap[fileId] = append(fileUsersMap[fileId], userId);
-	fileHolders[fileId] = append(fileHolders[fileId], userId);
+	fileUsersMap[fileId] = append(fileUsersMap[fileId], userId)
+	fileHolders[fileId] = append(fileHolders[fileId], userId)
 
-	return &emptypb.Empty{ }, nil
+	return &emptypb.Empty{}, nil
 }
