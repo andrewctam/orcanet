@@ -28,6 +28,7 @@ import (
 	"net"
 
 	"google.golang.org/grpc"
+	"google.golang.org/protobuf/types/known/emptypb"
 	pb "ratcoin/market"
 )
 
@@ -35,8 +36,13 @@ var (
 	port = flag.Int("port", 50051, "The server port")
 )
 
+// replace string with User and File types later
+
 // maps a file to a list of users who want this file
 var fileUsersMap = make(map[string][]string)
+
+// map of files to users holding the file
+var fileHolders = make(map[string][]string)
 
 // prints the current hashmap
 func printMap() {
@@ -66,13 +72,19 @@ func main() {
 }
 
 // Add a request that a user with userId wants file with fileId
-func (s *server) RequestFile(ctx context.Context, in *pb.FileRequest) (*pb.MessageReply, error) {
+func (s *server) RequestFile(ctx context.Context, in *pb.FileRequest) (*pb.FileResponse, error) {
 	userId := in.GetUserId()
 	fileId := in.GetFileId()
+	
+	// Check if file is held by anyone; I hate Go
+	if _, ok := fileHolders[fileId]; !ok {
+		return &pb.FileResponse { Exists: false, Message: "File not found" }, nil;
+	}
 
 	fileUsersMap[fileId] = append(fileUsersMap[fileId], userId)
 
 	return &pb.MessageReply{Message: "OK"}, nil
+	return &pb.FileResponse{ Exists: true, Message: "OK" }, nil
 }
 
 // Get a list of userIds who are requesting a file with fileId
@@ -82,5 +94,16 @@ func (s *server) CheckRequests(ctx context.Context, in *pb.CheckRequest) (*pb.Li
 	userIds := fileUsersMap[fileId]
 	printMap()
 
-	return &pb.ListReply{Strings: userIds}, nil
+	return &pb.ListReply{ Strings: userIds }, nil
+}
+
+// register that the userId holds fileId
+func (s *server) RegisterFile(ctx context.Context, in *pb.RegisterRequest) (*emptypb.Empty, error) {
+	userId := in.GetUserId()
+	fileId := in.GetFileId()
+
+	fileUsersMap[fileId] = append(fileUsersMap[fileId], userId);
+	fileHolders[fileId] = append(fileHolders[fileId], userId);
+
+	return &emptypb.Empty{ }, nil
 }
