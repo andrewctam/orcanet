@@ -1,0 +1,25 @@
+syntax = "proto3";
+option go_package = "ratcoin/market/market";
+package market;
+
+service Market {
+  rpc RequestFile (FileRequest) returns (MessageReply) {}
+  rpc CheckRequests (CheckRequest) returns (ListReply) {}
+}
+
+message FileRequest {
+  string userId = 1;
+  string fileId = 2;
+}
+
+message CheckRequest {
+  string fileId = 1;
+}
+
+message MessageReply {
+  string message = 1;
+}
+
+message ListReply {
+  repeated string strings = 1;
+}
