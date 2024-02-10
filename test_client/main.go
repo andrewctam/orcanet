@@ -48,6 +48,10 @@ func main() {
 
 	createRequest(c, *userId, *fileId)
 	checkRequests(c, *fileId)
+	
+	registerRequest(c, *userId, *fileId)
+	createRequest(c, *userId, *fileId)
+	checkRequests(c, *fileId)
 }
 
 // creates a request that a user with userId wants a file with fileId
@@ -59,7 +63,7 @@ func createRequest(c pb.MarketClient, userId string, fileId string) {
 	if err != nil {
 		log.Fatalf("Error: %v", err)
 	} else {
-		log.Printf("Result: %s", r.GetMessage())
+		log.Printf("Result: %t, %s", r.GetExists(), r.GetMessage())
 	}
 }
 
@@ -68,10 +72,22 @@ func checkRequests(c pb.MarketClient, fileId string) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
-	reqs, err := c.CheckRequests(ctx, &pb.CheckRequest{FileId: fileId})
+	reqs, err := c.CheckRequests(ctx, &pb.CheckRequest{ FileId: fileId })
 	if err != nil {
 		log.Fatalf("Error: %v", err)
 	} else {
 		log.Printf("Strings: %s", reqs.GetStrings())
+	}
+}
+
+func registerRequest(c pb.MarketClient, userId string, fileId string) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	_, err := c.RegisterFile(ctx, &pb.RegisterRequest{ UserId: userId, FileId: fileId })
+	if err != nil {
+		log.Fatalf("Error: %v", err)
+	} else {
+		log.Printf("Success")
 	}
 }

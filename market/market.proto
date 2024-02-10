@@ -1,10 +1,15 @@
 syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+
 option go_package = "ratcoin/market/market";
+
 package market;
 
 service Market {
-  rpc RequestFile (FileRequest) returns (MessageReply) {}
+  rpc RequestFile (FileRequest) returns (FileResponse) {}
   rpc CheckRequests (CheckRequest) returns (ListReply) {}
+  rpc RegisterFile (RegisterRequest) returns (google.protobuf.Empty) {}
 }
 
 message FileRequest {
@@ -16,8 +21,14 @@ message CheckRequest {
   string fileId = 1;
 }
 
-message MessageReply {
-  string message = 1;
+message RegisterRequest {
+  string userId = 1;
+  string fileId = 2;
+}
+
+message FileResponse {
+  bool exists = 1;
+  string message = 2;
 }
 
 message ListReply {
