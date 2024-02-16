@@ -25,9 +25,10 @@ import (
 	"log"
 	"time"
 
+	pb "orcanet/market"
+
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
-	pb "ratcoin/market"
 )
 
 var (

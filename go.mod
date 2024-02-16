@@ -1,4 +1,4 @@
-module ratcoin
+module orcanet
 
 go 1.22.0
 
