@@ -9,11 +9,22 @@ package market;
 service Market {
   rpc RequestFile (FileRequest) returns (FileResponse) {}
   rpc CheckRequests (CheckRequest) returns (ListReply) {}
+  rpc CheckHolders (CheckHolder) returns (ListReply) {}
   rpc RegisterFile (RegisterRequest) returns (google.protobuf.Empty) {}
 }
 
+message User {
+  string id = 1;
+  string name = 2;
+}
+
 message FileRequest {
-  string userId = 1;
+  User user = 1;
+  string fileId = 2;
+}
+
+message RegisterRequest {
+  User user = 1;
   string fileId = 2;
 }
 
@@ -21,9 +32,8 @@ message CheckRequest {
   string fileId = 1;
 }
 
-message RegisterRequest {
-  string userId = 1;
-  string fileId = 2;
+message CheckHolder {
+  string fileId = 1;
 }
 
 message FileResponse {
