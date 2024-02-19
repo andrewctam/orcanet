@@ -26,6 +26,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"strings"
 
 	pb "orcanet/market"
 
@@ -37,21 +38,36 @@ var (
 	port = flag.Int("port", 50051, "The server port")
 )
 
-// replace string with User and File types later
-
 // maps a file to a list of users who want this file
-var fileUsersMap = make(map[string][]string)
+var fileRequesters = make(map[string][]*pb.User)
 
 // map of files to users holding the file
-var fileHolders = make(map[string][]string)
+var fileHolders = make(map[string][]*pb.User)
 
-// prints the current hashmap
-func printMap() {
-	fmt.Println("Current map:")
-	for key, value := range fileUsersMap {
-		fmt.Printf("File ID: %s, UserIDs: %v\n", key, value)
-	}
+// print the current requesters map 
+func printRequestersMap() {
+    for fileID, users := range fileRequesters {
+        fmt.Print("\nFile ID: ", fileID, "\nUsers Requesting File: \n")
+        userNames := []string{}
+        for _, user := range users {
+            userNames = append(userNames, user.GetName())
+        }
+        fmt.Println(strings.Join(userNames, "\n"))
+    }
 }
+
+// print the current holders map
+func printHoldersMap() {
+    for fileID, holders := range fileHolders {
+        fmt.Print("\nFile ID: ", fileID, "\nUsers Holding File: \n")
+        holderNames := []string{}
+        for _, holder := range holders {
+            holderNames = append(holderNames, holder.GetName())
+        }
+        fmt.Println(strings.Join(holderNames, "\n"))
+    }
+}
+
 
 type server struct {
 	pb.UnimplementedMarketServer
@@ -74,7 +90,7 @@ func main() {
 
 // Add a request that a user with userId wants file with fileId
 func (s *server) RequestFile(ctx context.Context, in *pb.FileRequest) (*pb.FileResponse, error) {
-	userId := in.GetUserId()
+	user := in.GetUser()
 	fileId := in.GetFileId()
 
 	// Check if file is held by anyone; I hate Go
@@ -82,7 +98,7 @@ func (s *server) RequestFile(ctx context.Context, in *pb.FileRequest) (*pb.FileR
 		return &pb.FileResponse{Exists: false, Message: "File not found"}, nil
 	}
 
-	fileUsersMap[fileId] = append(fileUsersMap[fileId], userId)
+	fileRequesters[fileId] = append(fileRequesters[fileId], user)
 
 	return &pb.FileResponse{Exists: true, Message: "OK"}, nil
 }
@@ -91,19 +107,48 @@ func (s *server) RequestFile(ctx context.Context, in *pb.FileRequest) (*pb.FileR
 func (s *server) CheckRequests(ctx context.Context, in *pb.CheckRequest) (*pb.ListReply, error) {
 	fileId := in.GetFileId()
 
-	userIds := fileUsersMap[fileId]
-	printMap()
+	users := fileRequesters[fileId]
 
-	return &pb.ListReply{Strings: userIds}, nil
+	// Make list of userIDs from the users struct and return
+	userNames := make([]string, len(users))
+	for i, user := range users {
+		userNames[i] = user.GetName()
+	}
+
+	printRequestersMap()
+
+	return &pb.ListReply{Strings: userNames}, nil
 }
 
-// register that the userId holds fileId
+// CheckHolders returns a list of user names holding a file with fileId
+func (s *server) CheckHolders(ctx context.Context, in *pb.CheckHolder) (*pb.ListReply, error) {
+    fileId := in.GetFileId()
+
+    holders := fileHolders[fileId]
+
+    holderNames := make([]string, len(holders))
+    for i, holder := range holders {
+        holderNames[i] = holder.GetName()
+    }
+
+    printHoldersMap()
+
+    return &pb.ListReply{Strings: holderNames}, nil
+}
+
+
+// register that the userId holds fileId, then add the user to the list of file holders
 func (s *server) RegisterFile(ctx context.Context, in *pb.RegisterRequest) (*emptypb.Empty, error) {
-	userId := in.GetUserId()
+	user := in.GetUser()
 	fileId := in.GetFileId()
 
-	fileUsersMap[fileId] = append(fileUsersMap[fileId], userId)
-	fileHolders[fileId] = append(fileHolders[fileId], userId)
+	// Check if file is held by anyone, don't do anything
+	// TODO: perform blockchain transaction here
+	if _, ok := fileHolders[fileId]; ok {
+		return &emptypb.Empty{}, nil
+	}
+
+	fileHolders[fileId] = append(fileHolders[fileId], user)
 
 	return &emptypb.Empty{}, nil
 }

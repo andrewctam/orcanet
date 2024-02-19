@@ -24,6 +24,8 @@ import (
 	"flag"
 	"log"
 	"time"
+	"fmt"
+	"math/rand"
 
 	pb "orcanet/market"
 
@@ -33,8 +35,7 @@ import (
 
 var (
 	addr   = flag.String("addr", "localhost:50051", "the address to connect to")
-	userId = flag.String("userId", "user123", "User ID")
-	fileId = flag.String("fileId", "imageOfRat", "File ID")
+	fileId = flag.String("fileId", "RatCoin.pdf", "File ID")
 )
 
 func main() {
@@ -47,20 +48,36 @@ func main() {
 	defer conn.Close()
 	c := pb.NewMarketClient(conn)
 
-	createRequest(c, *userId, *fileId)
-	checkRequests(c, *fileId)
+	// Prompt for username in terminal
+    var username string
+    fmt.Print("Enter username: ")
+    fmt.Scanln(&username)
 
-	registerRequest(c, *userId, *fileId)
-	createRequest(c, *userId, *fileId)
+    // Generate a random ID for new user
+    rand.Seed(time.Now().UnixNano())
+    userID := fmt.Sprintf("user%d", rand.Intn(10000))
+
+    // Create a User struct with the provided username and generated ID
+    user := &pb.User{
+        Id:   userID,
+        Name: username,
+    }
+
+	// Test
+	createRequest(c, user, *fileId)
+	registerRequest(c, user, *fileId)
+
 	checkRequests(c, *fileId)
+	checkHolders(c, *fileId)
+
 }
 
 // creates a request that a user with userId wants a file with fileId
-func createRequest(c pb.MarketClient, userId string, fileId string) {
+func createRequest(c pb.MarketClient, user *pb.User, fileId string) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
-	r, err := c.RequestFile(ctx, &pb.FileRequest{UserId: userId, FileId: fileId})
+	r, err := c.RequestFile(ctx, &pb.FileRequest{User: user, FileId: fileId})
 	if err != nil {
 		log.Fatalf("Error: %v", err)
 	} else {
@@ -77,15 +94,28 @@ func checkRequests(c pb.MarketClient, fileId string) {
 	if err != nil {
 		log.Fatalf("Error: %v", err)
 	} else {
-		log.Printf("Strings: %s", reqs.GetStrings())
+		log.Printf("Requests: %s", reqs.GetStrings())
 	}
 }
 
-func registerRequest(c pb.MarketClient, userId string, fileId string) {
+// print all users who are holding a file with fileId
+func checkHolders(c pb.MarketClient, fileId string) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
-	_, err := c.RegisterFile(ctx, &pb.RegisterRequest{UserId: userId, FileId: fileId})
+	holders, err := c.CheckHolders(ctx, &pb.CheckHolder{FileId: fileId})
+	if err != nil {
+		log.Fatalf("Error: %v", err)
+	} else {
+		log.Printf("Holders: %s", holders.GetStrings())
+	}
+}
+
+func registerRequest(c pb.MarketClient, user *pb.User, fileId string) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	_, err := c.RegisterFile(ctx, &pb.RegisterRequest{User: user, FileId: fileId})
 	if err != nil {
 		log.Fatalf("Error: %v", err)
 	} else {
