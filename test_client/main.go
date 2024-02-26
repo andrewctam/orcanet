@@ -20,12 +20,14 @@
 package main
 
 import (
+	"cmp"
 	"context"
 	"flag"
-	"log"
-	"time"
 	"fmt"
+	"log"
 	"math/rand"
+	"slices"
+	"strconv"
 
 	pb "orcanet/market"
 
@@ -34,11 +36,16 @@ import (
 )
 
 var (
-	addr   = flag.String("addr", "localhost:50051", "the address to connect to")
-	fileId = flag.String("fileId", "RatCoin.pdf", "File ID")
+	addr = flag.String("addr", "localhost:50051", "the address to connect to")
 )
 
+type clientHandle struct {
+	stream pb.MarketService_RequestQueryClient
+	user   *pb.User
+}
+
 func main() {
+
 	flag.Parse()
 	// Set up a connection to the server.
 	conn, err := grpc.Dial(*addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
@@ -46,79 +53,194 @@ func main() {
 		log.Fatalf("Error: %v", err)
 	}
 	defer conn.Close()
-	c := pb.NewMarketClient(conn)
+	c := pb.NewMarketServiceClient(conn)
 
 	// Prompt for username in terminal
-    var username string
-    fmt.Print("Enter username: ")
-    fmt.Scanln(&username)
+	var username string
+	fmt.Print("Enter username: ")
+	fmt.Scanln(&username)
 
-    // Generate a random ID for new user
-    rand.Seed(time.Now().UnixNano())
-    userID := fmt.Sprintf("user%d", rand.Intn(10000))
+	// Generate a random ID for new user
+	userID := fmt.Sprintf("user%d", rand.Intn(10000))
 
-    // Create a User struct with the provided username and generated ID
-    user := &pb.User{
-        Id:   userID,
-        Name: username,
-    }
-
-	// Test
-	createRequest(c, user, *fileId)
-	registerRequest(c, user, *fileId)
-
-	checkRequests(c, *fileId)
-	checkHolders(c, *fileId)
-
-}
-
-// creates a request that a user with userId wants a file with fileId
-func createRequest(c pb.MarketClient, user *pb.User, fileId string) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
-
-	r, err := c.RequestFile(ctx, &pb.FileRequest{User: user, FileId: fileId})
+	fmt.Print("Enter a price for supplying files: ")
+	var price int32
+	_, err = fmt.Scanln(&price)
 	if err != nil {
-		log.Fatalf("Error: %v", err)
-	} else {
-		log.Printf("Result: %t, %s", r.GetExists(), r.GetMessage())
+		fmt.Println("Error: ", err)
+		return
+	}
+
+	// Make random port and assign it to registered user
+	random_port := rand.Intn(65535-49152+1) + 49152
+
+	user := &pb.User{
+		Id:    userID,
+		Name:  username,
+		Ip:    "localhost",
+		Port:  int32(random_port),
+		Price: price,
+	}
+
+	// Create a stream and send it to the client handler
+	stream, err := c.RequestQuery(context.Background())
+	if err != nil {
+		log.Fatalf("Failed to call %v", err)
+	}
+	ch := clientHandle{stream: stream, user: user}
+
+	// We really need to think about how to peoerply synchronize this 
+	// Create channels
+	holdersch := make(chan *pb.Holders)
+	registrch := make(chan string, 1)
+
+	// Immediately start a goroutine for this (will probably need to handle this better)
+	// Now that I think about it, is this okay? 
+	go ch.getMessages(holdersch, registrch)
+
+	// Print out list of options 
+	for {
+		fmt.Println("---------------------------------")
+		fmt.Println("1. Request a file")
+		fmt.Println("2. Register a file")
+		fmt.Println("3. Check holders for a file")
+		fmt.Println("4. Exit")
+		fmt.Print("Option: ")
+
+		var choice int
+		_, err := fmt.Scanln(&choice)
+		if err != nil {
+			fmt.Println("Error: ", err)
+			continue
+		}
+
+		if choice == 4 {
+			return
+		}
+
+		fmt.Print("Enter a file hash: ")
+		var fileHash string
+		_, err = fmt.Scanln(&fileHash)
+		if err != nil {
+			fmt.Println("Error: ", err)
+			continue
+		}
+
+		switch choice {
+			case 1:
+				ch.createRequest(fileHash)
+			case 2:
+				ch.registerRequest(fileHash, registrch)
+			case 3:
+				ch.checkHolders(fileHash, holdersch)
+			case 4:
+				return
+			default:
+				fmt.Println("Unknown option: ", choice)
+		}
+		fmt.Println()
 	}
 }
 
-// get all users who wants a file with fileId
-func checkRequests(c pb.MarketClient, fileId string) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
+// Will need to finish this later 
+func (ch *clientHandle) createRequest(fileHash string) {
 
-	reqs, err := c.CheckRequests(ctx, &pb.CheckRequest{FileId: fileId})
+	/* err := ch.stream.Send(&pb.Request{RequestType: &pb.Request_Filerequest{Filerequest: &pb.FileRequest{User: ch.user, FileHash: fileHash}}})
 	if err != nil {
-		log.Fatalf("Error: %v", err)
-	} else {
-		log.Printf("Requests: %s", reqs.GetStrings())
+		log.Printf("Error while sending message to server :: %v", err)
+	} */
+
+	// Might need to do more stuff here
+}
+
+// register a file 
+func (ch *clientHandle) registerRequest(fileHash string, registrch <-chan string) {
+
+	err := ch.stream.Send(&pb.Request{RequestType: &pb.Request_Supplyfile{Supplyfile: &pb.SupplyFile{User: ch.user, FileHash: fileHash}}})
+	if err != nil {
+		log.Printf("Error while sending message to server :: %v", err)
+	}
+
+	// Let's try the method we saw 
+	response := <- registrch // This will hang until we hae read something 
+	fmt.Println(response)
+}
+
+// check for holders then make a subsequent query to request for a file
+func (ch *clientHandle) checkHolders(fileHash string, holdersch chan *pb.Holders) {
+
+	err := ch.stream.Send(&pb.Request{RequestType: &pb.Request_Checkholder{Checkholder: &pb.CheckHolder{FileHash: fileHash}}})
+	if err != nil {
+		log.Printf("Error while sending message  to server :: %v", err)
+	}
+
+	// Will eventually need a case for err channel so we can break out of the loop if an error occurs
+	for {
+		select {
+			// Somehow the response is never received but it was fine before?? how come?? 
+			case response := <-holdersch:
+
+				supply_files := response.GetHolders()
+
+				slices.SortFunc(supply_files, func(a, b *pb.SupplyFile) int {
+					return cmp.Compare(a.GetUser().GetPrice(), b.GetUser().GetPrice())
+				})
+
+				for idx, holder := range supply_files {
+					user := holder.GetUser()
+					fmt.Printf("(%d) Username: %s, Price: %d\n", idx, user.GetName(), user.GetPrice())
+				}
+				fmt.Println("Choose which supplier to get file from, or 'n' to cancel:")
+				var choice string
+				_, err = fmt.Scanln(&choice)
+				if err != nil {
+					fmt.Println("Error: ", err)
+					return
+				}
+				idx, err := strconv.ParseInt(choice, 10, 32)
+				if err != nil {
+					return
+				}
+				if idx < 0 || int(idx) > len(supply_files) {
+					fmt.Println("Invalid index chosen")
+					return
+				}
+				fmt.Printf("%v chosen, requesting file\n", idx)
+
+				// Get the file and the user with it
+				// May need to modify this so we will have to see
+				/*user := supply_files[idx].GetUser()
+				err = ch.stream.Send(&pb.Request{RequestType: &pb.Request_Filerequest{Filerequest: &pb.FileRequest{User: user, FileHash: fileHash}}})
+				if err != nil {
+					log.Fatalf("Error %v", err)
+				}  */
+				return 
+		}
 	}
 }
 
-// print all users who are holding a file with fileId
-func checkHolders(c pb.MarketClient, fileId string) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
+// Goroutine that constantly reads messages and writes into respective channels 
+func (ch *clientHandle) getMessages(holdersch chan <- *pb.Holders, registrch chan <- string) {
 
-	holders, err := c.CheckHolders(ctx, &pb.CheckHolder{FileId: fileId})
-	if err != nil {
-		log.Fatalf("Error: %v", err)
-	} else {
-		log.Printf("Holders: %s", holders.GetStrings())
-	}
-}
+	for {
+		// This blocks until a message is received
+		mssg, err := ch.stream.Recv() 
+		if err != nil {
+			log.Printf("Error in receiving message from server :: %v", err)
+		}
 
-func registerRequest(c pb.MarketClient, user *pb.User, fileId string) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
-
-	_, err := c.RegisterFile(ctx, &pb.RegisterRequest{User: user, FileId: fileId})
-	if err != nil {
-		log.Fatalf("Error: %v", err)
-	} else {
-		log.Printf("Success")
+		// Determine the message type 
+		switch mssg.ResponseType.(type) {
+			case *pb.Response_Fileresponse:
+				// We will do something here later
+			case *pb.Response_Holders:
+				// Write into the holders channel 
+				supply_files := mssg.GetHolders()
+				holdersch <- supply_files
+			case *pb.Response_Message:
+				// Write into the register channel
+				message := mssg.GetMessage()
+				registrch <- message
+		}
 	}
 }

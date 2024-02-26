@@ -1,39 +1,42 @@
 syntax = "proto3";
 
-import "google/protobuf/empty.proto";
+// import "google/protobuf/empty.proto";
 
 option go_package = "orcanet/market/market";
 
 package market;
 
-service Market {
-  rpc RequestFile (FileRequest) returns (FileResponse) {}
-  rpc CheckRequests (CheckRequest) returns (ListReply) {}
-  rpc CheckHolders (CheckHolder) returns (ListReply) {}
-  rpc RegisterFile (RegisterRequest) returns (google.protobuf.Empty) {}
+service MarketService {
+  rpc RequestQuery (stream Request) returns (stream Response) {} 
+}
+
+message Request {
+  oneof request_type {
+    FileRequest filerequest = 1;
+    CheckHolder checkholder = 2;
+    SupplyFile  supplyfile = 3;
+  }
+}
+
+message Response {
+  oneof response_type {
+    FileResponse fileresponse = 1;
+    Holders holders = 2; 
+    string message = 3; 
+  }
 }
 
 message User {
   string id = 1;
   string name = 2;
+  string ip = 3;
+  int32 port = 4;
+  int32 price = 5;
 }
 
 message FileRequest {
   User user = 1;
-  string fileId = 2;
-}
-
-message RegisterRequest {
-  User user = 1;
-  string fileId = 2;
-}
-
-message CheckRequest {
-  string fileId = 1;
-}
-
-message CheckHolder {
-  string fileId = 1;
+  string fileHash = 3;
 }
 
 message FileResponse {
@@ -41,6 +44,15 @@ message FileResponse {
   string message = 2;
 }
 
-message ListReply {
-  repeated string strings = 1;
+message SupplyFile {
+  User user = 1;
+  string fileHash = 2;
+}
+
+message CheckHolder {
+  string fileHash = 1;
+}
+
+message Holders {
+  repeated SupplyFile holders = 1;
 }
