@@ -24,7 +24,7 @@ message User {
   int32 port = 4;
 
   // price per mb for a file
-  int32 price = 5;
+  int64 price = 5;
 }
 
 message FileRequest {

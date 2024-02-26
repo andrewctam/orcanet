@@ -59,7 +59,7 @@ func main() {
 	userID := fmt.Sprintf("user%d", rand.Intn(10000))
 
 	fmt.Print("Enter a price for supplying files: ")
-	var price int32
+	var price int64
 	_, err = fmt.Scanln(&price)
 	if err != nil {
 		fmt.Println("Error: ", err)
