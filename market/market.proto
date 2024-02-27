@@ -27,6 +27,12 @@ message User {
 
 message CheckHolderRequest {
   string fileHash = 1;
+  // TODO: some filters for querying
+  // int32 maxPrice = 2; // have -1 for no min?
+  // int32 minPrice = 3; // have -1 for no max?
+  // int32 maxNum = 4; // have -1 for unlimited
+  // bool sortByPrice = 5; // 0 = unsorted -1 for cheapest first, 1 for most expensive first
+  // bool cheapestOnly = 6;
 }
 
 message RegisterFileRequest {
