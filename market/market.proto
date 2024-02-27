@@ -34,12 +34,6 @@ enum SortingMethod {
 }
 message CheckHoldersRequest {
   string fileHash = 1;
-  // TODO: some filters for querying
-  // int64 minPrice = 2;
-  // int64 maxPrice = 3;
-  // SortingMethod sort = 4;
-  // int64 pageSize = 5;
-  // int64 pageNum = 6; 
 }
 
 message RegisterFileRequest {
