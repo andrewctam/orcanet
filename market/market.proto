@@ -25,14 +25,21 @@ message User {
   int32 price = 5;
 }
 
+
+enum SortingMethod {
+  NEWEST = 0;
+  OLDEST = 1;
+  CHEAPEST = 2;
+  MOST_EXPENSIVE = 3;
+}
 message CheckHoldersRequest {
   string fileHash = 1;
   // TODO: some filters for querying
   // int64 maxPrice = 2; // have -1 for no min?
   // int64 minPrice = 3; // have -1 for no max?
-  // int64 maxNum = 4; // have -1 for unlimited
-  // bool sortByPrice = 5; // 0 = unsorted -1 for cheapest first, 1 for most expensive first
-  // bool cheapestOnly = 6;
+  // SortingMethod sortByPrice = 4;
+  // int64 pageSize = 5; // have -1 for unlimited
+  // int64 pageNum = 6; 
 }
 
 message RegisterFileRequest {
