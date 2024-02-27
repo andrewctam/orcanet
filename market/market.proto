@@ -25,13 +25,6 @@ message User {
   int32 price = 5;
 }
 
-
-enum SortingMethod {
-  NEWEST = 0;
-  OLDEST = 1;
-  CHEAPEST = 2;
-  MOST_EXPENSIVE = 3;
-}
 message CheckHoldersRequest {
   string fileHash = 1;
 }
