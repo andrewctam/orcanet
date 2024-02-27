@@ -35,10 +35,10 @@ enum SortingMethod {
 message CheckHoldersRequest {
   string fileHash = 1;
   // TODO: some filters for querying
-  // int64 maxPrice = 2; // have -1 for no min?
-  // int64 minPrice = 3; // have -1 for no max?
-  // SortingMethod sortByPrice = 4;
-  // int64 pageSize = 5; // have -1 for unlimited
+  // int64 minPrice = 2;
+  // int64 maxPrice = 3;
+  // SortingMethod sort = 4;
+  // int64 pageSize = 5;
   // int64 pageNum = 6; 
 }
 
