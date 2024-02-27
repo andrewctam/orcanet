@@ -7,8 +7,11 @@ option go_package = "orcanet/market/market";
 package market;
 
 service Market {
-  rpc RegisterFile (SupplyFile) returns (google.protobuf.Empty) {}
-  rpc CheckHolders (CheckHolder) returns (Holders) {}
+  // register a file on the market
+  rpc RegisterFile (RegisterFileRequest) returns (google.protobuf.Empty) {}
+
+  // check for holders of a file. returns a list of users
+  rpc CheckHolders (CheckHolderRequest) returns (HoldersResponse) {}
 }
 
 message User {
@@ -22,20 +25,15 @@ message User {
   int32 price = 5;
 }
 
-message FileRequest {
-  User user = 1;
-  string fileHash = 2;
-}
-
-message CheckHolder {
+message CheckHolderRequest {
   string fileHash = 1;
 }
 
-message SupplyFile {
+message RegisterFileRequest {
   User user = 1;
   string fileHash = 2;
 }
 
-message Holders {
-  repeated SupplyFile holders = 1;
+message HoldersResponse {
+  repeated User holders = 1;
 }

@@ -119,18 +119,17 @@ func checkHolders(c pb.MarketClient, user *pb.User, fileHash string) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
-	holders, err := c.CheckHolders(ctx, &pb.CheckHolder{FileHash: fileHash})
+	holders, err := c.CheckHolders(ctx, &pb.CheckHolderRequest{FileHash: fileHash})
 	if err != nil {
 		log.Fatalf("Error: %v", err)
 		return
 	}
 	supply_files := holders.GetHolders()
-	slices.SortFunc(supply_files, func(a, b *pb.SupplyFile) int {
-		return cmp.Compare(a.GetUser().GetPrice(), b.GetUser().GetPrice())
+	slices.SortFunc(supply_files, func(a, b *pb.User) int {
+		return cmp.Compare(a.GetPrice(), b.GetPrice())
 	})
 	for idx, holder := range supply_files {
-		user := holder.GetUser()
-		fmt.Printf("(%d) Username: %s, Price: %d\n", idx, user.GetName(), user.GetPrice())
+		fmt.Printf("(%d) Username: %s, Price: %d\n", idx, holder.GetName(), holder.GetPrice())
 	}
 
 }
@@ -139,7 +138,7 @@ func supplyFile(c pb.MarketClient, user *pb.User, fileHash string) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
-	_, err := c.RegisterFile(ctx, &pb.SupplyFile{User: user, FileHash: fileHash})
+	_, err := c.RegisterFile(ctx, &pb.RegisterFileRequest{User: user, FileHash: fileHash})
 	if err != nil {
 		log.Fatalf("Error: %v", err)
 	} else {

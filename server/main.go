@@ -38,7 +38,7 @@ var (
 )
 
 // map file hashes to supplied files + prices
-var files = make(map[string][]*pb.SupplyFile)
+var files = make(map[string][]*pb.RegisterFileRequest)
 
 // print the current holders map
 func printHoldersMap() {
@@ -73,7 +73,7 @@ func main() {
 }
 
 // register that the a user holds a file, then add the user to the list of file holders
-func (s *server) RegisterFile(ctx context.Context, in *pb.SupplyFile) (*emptypb.Empty, error) {
+func (s *server) RegisterFile(ctx context.Context, in *pb.RegisterFileRequest) (*emptypb.Empty, error) {
 	hash := in.GetFileHash()
 
 	files[hash] = append(files[hash], in)
@@ -82,11 +82,17 @@ func (s *server) RegisterFile(ctx context.Context, in *pb.SupplyFile) (*emptypb.
 }
 
 // CheckHolders returns a list of user names holding a file with a hash
-func (s *server) CheckHolders(ctx context.Context, in *pb.CheckHolder) (*pb.Holders, error) {
+func (s *server) CheckHolders(ctx context.Context, in *pb.CheckHolderRequest) (*pb.HoldersResponse, error) {
 	hash := in.GetFileHash()
 
 	holders := files[hash]
+
+	users := make([]*pb.User, len(holders))
+	for i, holder := range holders {
+		users[i] = holder.GetUser()
+	}
+
 	printHoldersMap()
 
-	return &pb.Holders{Holders: holders}, nil
+	return &pb.HoldersResponse{Holders: users}, nil
 }
