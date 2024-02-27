@@ -30,8 +30,8 @@ const (
 type MarketClient interface {
 	// register a file on the market
 	RegisterFile(ctx context.Context, in *RegisterFileRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
-	// check holders and their price of a file
-	CheckHolders(ctx context.Context, in *CheckHolderRequest, opts ...grpc.CallOption) (*HoldersResponse, error)
+	// check for holders of a file. returns a list of users
+	CheckHolders(ctx context.Context, in *CheckHoldersRequest, opts ...grpc.CallOption) (*HoldersResponse, error)
 }
 
 type marketClient struct {
@@ -51,7 +51,7 @@ func (c *marketClient) RegisterFile(ctx context.Context, in *RegisterFileRequest
 	return out, nil
 }
 
-func (c *marketClient) CheckHolders(ctx context.Context, in *CheckHolderRequest, opts ...grpc.CallOption) (*HoldersResponse, error) {
+func (c *marketClient) CheckHolders(ctx context.Context, in *CheckHoldersRequest, opts ...grpc.CallOption) (*HoldersResponse, error) {
 	out := new(HoldersResponse)
 	err := c.cc.Invoke(ctx, Market_CheckHolders_FullMethodName, in, out, opts...)
 	if err != nil {
@@ -66,8 +66,8 @@ func (c *marketClient) CheckHolders(ctx context.Context, in *CheckHolderRequest,
 type MarketServer interface {
 	// register a file on the market
 	RegisterFile(context.Context, *RegisterFileRequest) (*emptypb.Empty, error)
-	// check holders and their price of a file
-	CheckHolders(context.Context, *CheckHolderRequest) (*HoldersResponse, error)
+	// check for holders of a file. returns a list of users
+	CheckHolders(context.Context, *CheckHoldersRequest) (*HoldersResponse, error)
 	mustEmbedUnimplementedMarketServer()
 }
 
@@ -78,7 +78,7 @@ type UnimplementedMarketServer struct {
 func (UnimplementedMarketServer) RegisterFile(context.Context, *RegisterFileRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RegisterFile not implemented")
 }
-func (UnimplementedMarketServer) CheckHolders(context.Context, *CheckHolderRequest) (*HoldersResponse, error) {
+func (UnimplementedMarketServer) CheckHolders(context.Context, *CheckHoldersRequest) (*HoldersResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CheckHolders not implemented")
 }
 func (UnimplementedMarketServer) mustEmbedUnimplementedMarketServer() {}
@@ -113,7 +113,7 @@ func _Market_RegisterFile_Handler(srv interface{}, ctx context.Context, dec func
 }
 
 func _Market_CheckHolders_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CheckHolderRequest)
+	in := new(CheckHoldersRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -125,7 +125,7 @@ func _Market_CheckHolders_Handler(srv interface{}, ctx context.Context, dec func
 		FullMethod: Market_CheckHolders_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MarketServer).CheckHolders(ctx, req.(*CheckHolderRequest))
+		return srv.(MarketServer).CheckHolders(ctx, req.(*CheckHoldersRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }

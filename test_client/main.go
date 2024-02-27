@@ -119,7 +119,7 @@ func checkHolders(c pb.MarketClient, user *pb.User, fileHash string) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
-	holders, err := c.CheckHolders(ctx, &pb.CheckHolderRequest{FileHash: fileHash})
+	holders, err := c.CheckHolders(ctx, &pb.CheckHoldersRequest{FileHash: fileHash})
 	if err != nil {
 		log.Fatalf("Error: %v", err)
 		return

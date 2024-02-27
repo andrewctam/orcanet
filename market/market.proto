@@ -11,7 +11,7 @@ service Market {
   rpc RegisterFile (RegisterFileRequest) returns (google.protobuf.Empty) {}
 
   // check for holders of a file. returns a list of users
-  rpc CheckHolders (CheckHolderRequest) returns (HoldersResponse) {}
+  rpc CheckHolders (CheckHoldersRequest) returns (HoldersResponse) {}
 }
 
 message User {
@@ -25,7 +25,7 @@ message User {
   int32 price = 5;
 }
 
-message CheckHolderRequest {
+message CheckHoldersRequest {
   string fileHash = 1;
   // TODO: some filters for querying
   // int64 maxPrice = 2; // have -1 for no min?

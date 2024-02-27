@@ -82,7 +82,7 @@ func (s *server) RegisterFile(ctx context.Context, in *pb.RegisterFileRequest) (
 }
 
 // CheckHolders returns a list of user names holding a file with a hash
-func (s *server) CheckHolders(ctx context.Context, in *pb.CheckHolderRequest) (*pb.HoldersResponse, error) {
+func (s *server) CheckHolders(ctx context.Context, in *pb.CheckHoldersRequest) (*pb.HoldersResponse, error) {
 	hash := in.GetFileHash()
 
 	holders := files[hash]
