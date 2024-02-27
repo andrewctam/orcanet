@@ -101,7 +101,7 @@ func main() {
 
 		switch choice {
 		case 1:
-			supplyFile(c, user, fileHash)
+			registerFile(c, user, fileHash)
 		case 2:
 			checkHolders(c, user, fileHash)
 		case 3:
@@ -134,7 +134,7 @@ func checkHolders(c pb.MarketClient, user *pb.User, fileHash string) {
 
 }
 
-func supplyFile(c pb.MarketClient, user *pb.User, fileHash string) {
+func registerFile(c pb.MarketClient, user *pb.User, fileHash string) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
