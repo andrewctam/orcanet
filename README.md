@@ -1,8 +1,14 @@
-# Market Server
+# Go Market Server
 
-gRPC reference: https://grpc.io/docs/languages/go/quickstart
+## Team Sea Chicken 🐔
 
-To recompile protobuf:
+An implementation of the OrcaNet martket server, built using Go and [gRPC](https://grpc.io/docs/languages/go/quickstart).
+
+
+
+## Running
+
+To compile the protobuf at `market/market.proto`:
 
 ```Shell
 protoc --go_out=. --go_opt=paths=source_relative \
@@ -10,20 +16,31 @@ protoc --go_out=. --go_opt=paths=source_relative \
   market/market.proto
 ```
 
-## Running
-
 To run the market server:
 
 ```Shell
 go run server/main.go
 ```
 
-To run the test client:
+To run a test client:
 
 ```Shell
 go run test_client/main.go
 ```
 
 ## API
+Detailed gRPC endpoints are in `market/market.proto`
 
-gRPC endpoints are in `market/market.proto`
+- Holders of a file can register the file using the RegisterFile RPC.
+  - Provide a User with 5 fields: 
+    - `id`: some string to identify the user.
+    - `name`: a human-readable string to identify the user
+    - `ip`: a string of the public ip address
+    - `port`: an int32 of the port
+    - `price`: an int64 that details the price per mb of outgoing files
+  - Provide a fileHash string that is the hash of the file
+  - Returns nothing
+
+- Then, clients can search for holders using the CheckHolders RPC
+  - Provide a fileHash to identify the file to search for
+  - Returns a list of Users that hold the file.
