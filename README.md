@@ -2,7 +2,7 @@
 
 ## Team Sea Chicken 🐔
 
-An implementation of the OrcaNet martket server, built using Go and [gRPC](https://grpc.io/docs/languages/go/quickstart).
+An implementation of the OrcaNet market server, built using Go and [gRPC](https://grpc.io/docs/languages/go/quickstart).
 
 
 
