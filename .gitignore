@@ -21,3 +21,6 @@
 go.work
 
 .DS_Store
+
+# Generated protocol buffer files
+*.pb.go
